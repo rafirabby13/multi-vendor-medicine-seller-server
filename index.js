@@ -41,41 +41,54 @@ async function run() {
       const result = await cartCollection.find(query).toArray();
       res.send(result);
     });
-    
+
     app.patch("/cart/inc/:id", async (req, res) => {
-        const id = req.params.id;
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $inc: {
+          quantity: 1,
+        },
+      };
+      const result = await cartCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+    app.patch("/cart/dec/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $inc: {
+          quantity: -1,
+        },
+      };
+      const result = await cartCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+    app.delete("/cart/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+
+      const result = await cartCollection.deleteOne(query);
+      res.send(result);
+    });
+
+
+
+    app.delete("/cart", async (req, res) => {
+        
   
-        const query = {_id: new ObjectId(id)};
-        const options = { upsert: true };
-        const updateDoc = {
-            $inc: {
-                quantity: 1
-            },
-          };
-        const result = await cartCollection.updateOne(query,updateDoc,options);
+        const query = {};
+  
+        const result = await cartCollection.deleteMany(query);
         res.send(result);
       });
-      app.patch("/cart/dec/:id", async (req, res) => {
-        const id = req.params.id;
-  
-        const query = {_id: new ObjectId(id)};
-        const options = { upsert: true };
-        const updateDoc = {
-            $inc: {
-                quantity: -1
-            },
-          };
-        const result = await cartCollection.updateOne(query,updateDoc,options);
-        res.send(result);
-      }); 
-      app.delete("/cart/:id", async (req, res) => {
-        const id = req.params.id;
-  
-        const query = {_id: new ObjectId(id)};
-       
-        const result = await cartCollection.deleteOne(query);
-        res.send(result);
-      });
+
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
