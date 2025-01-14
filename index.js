@@ -3,11 +3,10 @@ const app = express();
 
 require("dotenv").config();
 const cors = require("cors");
-const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-
 
 app.use(cors());
 app.use(express.json());
@@ -25,12 +24,15 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const cartCollection = client.db("medicineSelling").collection("cart");
+    const paymentCollection = client
+      .db("medicineSelling")
+      .collection("payment");
 
     // Cart routes
 
     app.post("/cart", async (req, res) => {
       const cartData = req.body;
-    //   console.log(cartData);
+      //   console.log(cartData);
       const result = await cartCollection.insertOne(cartData);
       res.send(result);
     });
@@ -80,34 +82,47 @@ async function run() {
       res.send(result);
     });
 
-
-
     app.delete("/cart", async (req, res) => {
-        
-  
-        const query = {};
-  
-        const result = await cartCollection.deleteMany(query);
-        res.send(result);
-      });
+      const query = {};
 
+      const result = await cartCollection.deleteMany(query);
+      res.send(result);
+    });
 
-    //   payment api 
+    //   payment api
 
-    app.post('/create-payment-intent', async (req, res) => {
-        
-        const {price} = req.body
-        const amount = parseInt(price * 100);
-        console.log(amount);
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      console.log(amount);
+      if (amount > 0) {
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount,
-            currency: 'usd',
-            payment_method_types: ['card'],
+            currency: "usd",
+            payment_method_types: ["card"],
           });
-
+    
           res.send({
-            clientSecret: paymentIntent.client_secret
-          })
+            clientSecret: paymentIntent.client_secret,
+          });
+      }
+    });
+
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      console.log(payment);
+      const result = await paymentCollection.insertOne(payment);
+
+      //    delete each items from the cart
+
+      const query = {
+        _id: {
+          $in: payment.cartId.map((id) => new ObjectId(id)),
+        },
+      };
+      const deletedResult = await cartCollection.deleteMany(query);
+
+      res.send({ result, deletedResult });
     });
 
     console.log(
