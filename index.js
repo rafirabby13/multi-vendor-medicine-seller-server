@@ -1,8 +1,10 @@
 const express = require("express");
 const app = express();
-
 require("dotenv").config();
+
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
+
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
@@ -28,6 +30,59 @@ async function run() {
       .db("medicineSelling")
       .collection("payment");
     const usersCollection = client.db("medicineSelling").collection("users");
+
+    // JWt related api's
+
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, `${process.env.ACCESS_TOKEN_KEY}`, {
+        expiresIn: "5h",
+      });
+      res.send({ token });
+    });
+
+    // jwt middleware
+    // console.log(req.headers.authorization.split(' ')[1]);
+
+    const verifyToken = (req, res, next) => {
+      // console.log(
+      //   "inside verify token ",
+      //   req.headers.authorization.split(" ")[1]
+      // );
+      // console.log("inside verify token ", req.headers);
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "Un-hatori access" });
+      }
+      const token = req.headers.authorization.split(" ")[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_KEY, function (err, decoded) {
+        if (err) {
+          return res.status(401).send({ message: "Un-hatori access" });
+        }
+        req.decoded = decoded;
+
+        next();
+      });
+    };
+
+
+    // verify admin
+
+    const verifyAdmin = async (req, res, next)=>{
+      
+
+      // console.log(req.decoded);
+      const query = {email: req.decoded.email}
+      const result = await usersCollection.findOne(query)
+
+      const role = result.role
+      if (role !== 'admin') {
+        return res.status(401).send({message: 'kiyu bacchu , pakar liya na!!'})
+      }
+
+      next()
+
+
+    }
 
     // Cart routes
 
@@ -147,16 +202,35 @@ async function run() {
       }
     });
 
-    app.get("/users", async (req, res) => {
-        const query = {};
-  
-        const result = await usersCollection.find(query).toArray();
-        res.send(result);
-      });
+    app.get("/users", verifyToken,verifyAdmin, async (req, res) => {
+      const query = {};
+
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+
+    app.get("/users/role/:email", verifyToken, async (req, res) => {
+      // console.log(req.decoded.email);
+      const query = {email: req.decoded.email};
+
+      const result = await usersCollection.findOne(query);
+      // console.log(result);
+      res.send(result.role);
+    });
+
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
+
+
+
+
+
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
