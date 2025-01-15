@@ -95,7 +95,7 @@ async function run() {
       const { price } = req.body;
       const amount = parseInt(price * 100);
       console.log(amount);
-      if (amount > 0) {
+     
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount,
             currency: "usd",
@@ -105,7 +105,7 @@ async function run() {
           res.send({
             clientSecret: paymentIntent.client_secret,
           });
-      }
+      
     });
 
     app.post("/payments", async (req, res) => {
@@ -124,6 +124,23 @@ async function run() {
 
       res.send({ result, deletedResult });
     });
+
+
+
+    //  Admin Dashboard related Api's
+
+
+    app.get("/paid-total", async (req, res) => {
+  
+        const query = {};
+  
+        const result = await paymentCollection.find().toArray();
+        res.send(result);
+      });
+
+
+
+
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
