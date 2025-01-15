@@ -27,6 +27,7 @@ async function run() {
     const paymentCollection = client
       .db("medicineSelling")
       .collection("payment");
+    const usersCollection = client.db("medicineSelling").collection("users");
 
     // Cart routes
 
@@ -95,17 +96,16 @@ async function run() {
       const { price } = req.body;
       const amount = parseInt(price * 100);
       console.log(amount);
-     
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: "usd",
-            payment_method_types: ["card"],
-          });
-    
-          res.send({
-            clientSecret: paymentIntent.client_secret,
-          });
-      
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
     });
 
     app.post("/payments", async (req, res) => {
@@ -125,22 +125,27 @@ async function run() {
       res.send({ result, deletedResult });
     });
 
-
-
     //  Admin Dashboard related Api's
 
+    app.get("/total-payment-paid", async (req, res) => {
+      const query = {};
 
-    app.get("/paid-total", async (req, res) => {
-  
-        const query = {};
-  
-        const result = await paymentCollection.find().toArray();
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
+
+    //   Users related api's
+
+    app.post("/users", async (req, res) => {
+      const usersData = req.body;
+      //   console.log(cartData);
+      const query = { email: usersData.email };
+      const isExist = await cartCollection.findOne(query);
+      if (!isExist) {
+        const result = await usersCollection.insertOne(usersData);
         res.send(result);
-      });
-
-
-
-
+      }
+    });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
