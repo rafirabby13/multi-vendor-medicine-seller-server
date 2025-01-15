@@ -140,12 +140,19 @@ async function run() {
       const usersData = req.body;
       //   console.log(cartData);
       const query = { email: usersData.email };
-      const isExist = await cartCollection.findOne(query);
+      const isExist = await usersCollection.findOne(query);
       if (!isExist) {
         const result = await usersCollection.insertOne(usersData);
         res.send(result);
       }
     });
+
+    app.get("/users", async (req, res) => {
+        const query = {};
+  
+        const result = await usersCollection.find(query).toArray();
+        res.send(result);
+      });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
