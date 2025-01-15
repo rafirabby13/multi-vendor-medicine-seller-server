@@ -222,6 +222,26 @@ async function run() {
       res.send(result.role);
     });
 
+
+    // update users role 
+
+    app.post("/user/role/:id", async (req, res) => {
+      const id = req.params.id
+      const role = req.body;
+      console.log(role, id);
+
+
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          role: role.updateRole,
+        },
+      };
+      const result = await usersCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
