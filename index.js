@@ -31,6 +31,7 @@ async function run() {
       .collection("payment");
     const usersCollection = client.db("medicineSelling").collection("users");
     const bannerCollection = client.db("medicineSelling").collection("banner");
+    const medicineCategoryCollection = client.db("medicineSelling").collection("category");
 
     // JWt related api's
 
@@ -287,6 +288,19 @@ async function run() {
       // console.log(query);
 
       const result = await bannerCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
+
+
+    // medicine category related api's
+
+    app.get("/medicine-category",verifyToken, async (req, res) => {
+      // console.log(req.decoded.email);
+      const query = {};
+      // console.log(query);
+
+      const result = await medicineCategoryCollection.find(query).toArray();
       // console.log(result);
       res.send(result);
     });
