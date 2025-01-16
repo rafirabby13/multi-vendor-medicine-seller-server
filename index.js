@@ -315,6 +315,24 @@ async function run() {
       res.send(result);
     });
 
+    // update category related api
+
+    app.post("/category/update", async (req, res) => {
+      
+      const updatedData = req.body;
+      console.log(updatedData);
+
+      const query = { _id: new ObjectId(updatedData.id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: updatedData.name,
+          image: updatedData.image
+        },
+      };
+      const result = await medicineCategoryCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
 
 
 
