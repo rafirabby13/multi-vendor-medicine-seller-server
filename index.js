@@ -251,6 +251,17 @@ async function run() {
       res.send(result)
     })
 
+
+    app.get("/banner", verifyToken, async (req, res) => {
+      // console.log(req.decoded.email);
+      const query = {};
+
+      const result = await bannerCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
+
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
