@@ -280,6 +280,21 @@ async function run() {
     });
 
 
+
+    app.get("/banner/active", async (req, res) => {
+      // console.log(req.decoded.email);
+      const query = {isActive: true};
+      // console.log(query);
+
+      const result = await bannerCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
+
+
+
+
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
