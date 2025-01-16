@@ -261,6 +261,24 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/banner/:id", async (req, res) => {
+      const id = req.params.id;
+     
+      const query = { _id: new ObjectId(id) };
+
+      const currentBanner = await bannerCollection.findOne(query)
+      // console.log(currentBanner.isActive);
+
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          isActive: !currentBanner.isActive,
+        },
+      };
+      const result = await bannerCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
