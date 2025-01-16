@@ -304,6 +304,16 @@ async function run() {
       // console.log(result);
       res.send(result);
     });
+    app.get("/medicine-category/:mid",verifyToken, async (req, res) => {
+      // console.log(req.decoded.email);
+      const  id = req.params.mid;
+      const query = {_id: new ObjectId(id)};
+      // console.log(query);
+
+      const result = await medicineCategoryCollection.findOne(query);
+      // console.log(result);
+      res.send(result);
+    });
 
 
 
