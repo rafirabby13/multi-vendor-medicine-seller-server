@@ -304,9 +304,9 @@ async function run() {
       // console.log(result);
       res.send(result);
     });
-    app.get("/medicine-category/:mid",verifyToken, async (req, res) => {
-      // console.log(req.decoded.email);
-      const  id = req.params.mid;
+    app.get("/medicine-category/:id",verifyToken, async (req, res) => {
+      
+      const  id = req.params.id;
       const query = {_id: new ObjectId(id)};
       // console.log(query);
 
@@ -317,22 +317,23 @@ async function run() {
 
     // update category related api
 
-    // app.post("/category/update", async (req, res) => {
+    app.post("/category/update", async (req, res) => {
       
-    //   const updatedData = req.body;
-    //   console.log(updatedData);
+      const updatedData = req.body;
+      // console.log(updatedData);
 
-    //   const query = { _id: new ObjectId(updatedData.id) };
-    //   const options = { upsert: true };
-    //   const updateDoc = {
-    //     $set: {
-    //       name: updatedData.name,
-    //       image: updatedData.image
-    //     },
-    //   };
-    //   const result = await medicineCategoryCollection.updateOne(query, updateDoc, options);
-    //   res.send(result);
-    // });
+      const query = { _id: new ObjectId(updatedData.id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: updatedData.name,
+          image: updatedData.image
+        },
+      };
+      const result = await medicineCategoryCollection.updateOne(query, updateDoc, options);
+      // console.log(result);
+      res.send(result);
+    });
 
        app.post("/category/add", async (req, res) => {
       
