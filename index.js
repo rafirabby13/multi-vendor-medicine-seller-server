@@ -30,6 +30,7 @@ async function run() {
       .db("medicineSelling")
       .collection("payment");
     const usersCollection = client.db("medicineSelling").collection("users");
+    const bannerCollection = client.db("medicineSelling").collection("banner");
 
     // JWt related api's
 
@@ -165,7 +166,7 @@ async function run() {
 
     app.post("/payments", async (req, res) => {
       const payment = req.body;
-      console.log(payment);
+      // console.log(payment);
       const result = await paymentCollection.insertOne(payment);
 
       //    delete each items from the cart
@@ -236,11 +237,19 @@ async function run() {
       const updateDoc = {
         $set: {
           role: role.updateRole,
-        },
+        },  
       };
       const result = await usersCollection.updateOne(query, updateDoc, options);
       res.send(result);
     });
+
+    // banner related api's
+
+    app.post('/banner', async (req, res)=>{
+      const bannerData = req.body;
+      const result = await bannerCollection.insertOne(bannerData)
+      res.send(result)
+    })
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
