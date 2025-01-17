@@ -193,27 +193,17 @@ async function run() {
       res.send({ result, deletedResult });
     });
 
-
-    app.get("/payments/seller", async (req, res) => {
+    app.get("/payments/seller", verifyToken, async (req, res) => {
       const email = req.query.email;
 
-      const query ={
-        sellerEmail: email
-      }
-      
+      const query = {
+        sellerEmail: email,
+      };
 
       const result = await paymentCollection.find(query).toArray();
 
-     
-
       res.send(result);
     });
-
-
-
-
-
-
 
     //  Admin Dashboard related Api's
 
