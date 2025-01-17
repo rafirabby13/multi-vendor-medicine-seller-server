@@ -238,7 +238,7 @@ async function run() {
 
     app.get("/myPayment", verifyToken, async (req, res) => {
       const email = req.query.email
-      const query = {email: email};
+      const query = {buyerEmail: email};
 
       const result = await paymentCollection.find(query).toArray();
       // console.log(result);
