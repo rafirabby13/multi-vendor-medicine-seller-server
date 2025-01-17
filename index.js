@@ -31,7 +31,13 @@ async function run() {
       .collection("payment");
     const usersCollection = client.db("medicineSelling").collection("users");
     const bannerCollection = client.db("medicineSelling").collection("banner");
-    const medicineCategoryCollection = client.db("medicineSelling").collection("category");
+    const medicineCategoryCollection = client
+      .db("medicineSelling")
+      .collection("category");
+    const shopCollection = client.db("medicineSelling").collection("shop");
+    const companyCollection = client
+      .db("medicineSelling")
+      .collection("company");
 
     // JWt related api's
 
@@ -66,32 +72,33 @@ async function run() {
       });
     };
 
-
     // verify admin
 
-    const verifyAdmin = async (req, res, next)=>{
-      
-
+    const verifyAdmin = async (req, res, next) => {
       // console.log(req.decoded);
-      const query = {email: req.decoded.email}
-      const result = await usersCollection.findOne(query)
+      const query = { email: req.decoded.email };
+      const result = await usersCollection.findOne(query);
 
-      const role = result.role
-      if (role !== 'admin') {
-        return res.status(401).send({message: 'kiyu bacchu , pakar liya na!!'})
+      const role = result.role;
+      if (role !== "admin") {
+        return res
+          .status(401)
+          .send({ message: "kiyu bacchu , pakar liya na!!" });
       }
 
-      next()
-
-
-    }
+      next();
+    };
 
     // Cart routes
 
     app.post("/cart", async (req, res) => {
       const cartData = req.body;
       //   console.log(cartData);
-      const result = await cartCollection.insertOne(cartData);
+      const cartDataPOst = {
+        ...cartData,
+        _id: new ObjectId(),
+      };
+      const result = await cartCollection.insertOne(cartDataPOst);
       res.send(result);
     });
     app.get("/cart", async (req, res) => {
@@ -107,6 +114,7 @@ async function run() {
 
     app.patch("/cart/inc/:id", async (req, res) => {
       const id = req.params.id;
+      console.log(id);
 
       const query = { _id: new ObjectId(id) };
       const options = { upsert: true };
@@ -116,6 +124,7 @@ async function run() {
         },
       };
       const result = await cartCollection.updateOne(query, updateDoc, options);
+      console.log(result);
       res.send(result);
     });
     app.patch("/cart/dec/:id", async (req, res) => {
@@ -169,10 +178,6 @@ async function run() {
       const payment = req.body;
       console.log(payment);
 
-      
- 
-      
-     
       const result = await paymentCollection.insertOne(payment);
 
       //    delete each items from the cart
@@ -182,17 +187,11 @@ async function run() {
           $in: payment.cartId.map((id) => new ObjectId(id)),
         },
       };
-      
+
       const deletedResult = await cartCollection.deleteMany(query);
 
       res.send({ result, deletedResult });
     });
-
-
-    
-
-
-
 
     //  Admin Dashboard related Api's
 
@@ -216,7 +215,7 @@ async function run() {
       }
     });
 
-    app.get("/users", verifyToken,verifyAdmin, async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const query = {};
 
       const result = await usersCollection.find(query).toArray();
@@ -229,7 +228,7 @@ async function run() {
 
     app.get("/users/role", verifyToken, async (req, res) => {
       // console.log(req.decoded.email);
-      const query = {email: req.decoded.email};
+      const query = { email: req.decoded.email };
 
       const result = await usersCollection.findOne(query);
       // console.log(result);
@@ -237,29 +236,27 @@ async function run() {
     });
 
     app.get("/myPayment", verifyToken, async (req, res) => {
-      const email = req.query.email
-      const query = {buyerEmail: email};
+      const email = req.query.email;
+      const query = { buyerEmail: email };
 
       const result = await paymentCollection.find(query).toArray();
       // console.log(result);
       res.send(result);
     });
 
-
-    // update users role 
+    // update users role
 
     app.post("/user/role/:id", async (req, res) => {
-      const id = req.params.id
+      const id = req.params.id;
       const role = req.body;
       console.log(role, id);
-
 
       const query = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateDoc = {
         $set: {
           role: role.updateRole,
-        },  
+        },
       };
       const result = await usersCollection.updateOne(query, updateDoc, options);
       res.send(result);
@@ -267,12 +264,11 @@ async function run() {
 
     // banner related api's
 
-    app.post('/banner', async (req, res)=>{
+    app.post("/banner", async (req, res) => {
       const bannerData = req.body;
-      const result = await bannerCollection.insertOne(bannerData)
-      res.send(result)
-    })
-
+      const result = await bannerCollection.insertOne(bannerData);
+      res.send(result);
+    });
 
     app.get("/banner", verifyToken, async (req, res) => {
       // console.log(req.decoded.email);
@@ -285,10 +281,10 @@ async function run() {
 
     app.patch("/banner/:id", async (req, res) => {
       const id = req.params.id;
-     
+
       const query = { _id: new ObjectId(id) };
 
-      const currentBanner = await bannerCollection.findOne(query)
+      const currentBanner = await bannerCollection.findOne(query);
       // console.log(currentBanner.isActive);
 
       const options = { upsert: true };
@@ -297,15 +293,17 @@ async function run() {
           isActive: !currentBanner.isActive,
         },
       };
-      const result = await bannerCollection.updateOne(query, updateDoc, options);
+      const result = await bannerCollection.updateOne(
+        query,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 
-
-
     app.get("/banner/active", async (req, res) => {
       // console.log(req.decoded.email);
-      const query = {isActive: true};
+      const query = { isActive: true };
       // console.log(query);
 
       const result = await bannerCollection.find(query).toArray();
@@ -313,10 +311,9 @@ async function run() {
       res.send(result);
     });
 
-
     // medicine category related api's
 
-    app.get("/medicine-category",verifyToken, async (req, res) => {
+    app.get("/medicine-category", verifyToken, async (req, res) => {
       // console.log(req.decoded.email);
       const query = {};
       // console.log(query);
@@ -335,10 +332,9 @@ async function run() {
       // console.log(result);
       res.send(result);
     });
-    app.get("/medicine-category/:id",verifyToken, async (req, res) => {
-      
-      const  id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+    app.get("/medicine-category/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
       // console.log(query);
 
       const result = await medicineCategoryCollection.findOne(query);
@@ -349,7 +345,6 @@ async function run() {
     // update category related api
 
     app.post("/category/update", async (req, res) => {
-      
       const updatedData = req.body;
       // console.log(updatedData);
 
@@ -358,24 +353,24 @@ async function run() {
       const updateDoc = {
         $set: {
           name: updatedData.name,
-          image: updatedData.image
+          image: updatedData.image,
         },
       };
-      const result = await medicineCategoryCollection.updateOne(query, updateDoc, options);
+      const result = await medicineCategoryCollection.updateOne(
+        query,
+        updateDoc,
+        options
+      );
       // console.log(result);
       res.send(result);
     });
 
-       app.post("/category/add", async (req, res) => {
-      
+    app.post("/category/add", async (req, res) => {
       const updatedData = req.body;
-      
 
-    
       const result = await medicineCategoryCollection.insertOne(updatedData);
       res.send(result);
     });
-
 
     app.delete("/category/:id", async (req, res) => {
       const id = req.params.id;
@@ -386,17 +381,51 @@ async function run() {
       res.send(result);
     });
 
+    // shop related api
 
+    app.get("/shop", async (req, res) => {
+      // const  id = req.params.id;
+      const query = {};
+      // console.log(query);
+
+      const result = await shopCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
+
+    app.get("/shop/seller", verifyToken, async (req, res) => {
+      const email = req.query.email;
+      // console.log(email);
+      const query = { sellerEmail: email };
+      // console.log(query);
+
+      const result = await shopCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
+
+    app.post("/shop/addItem", verifyToken, async (req, res) => {
+      const data = req.body;
+      // console.log(data);
+      const result = await shopCollection.insertOne(data);
+      res.send(result);
+    });
+
+    // category api's
+
+    app.get("/company", async (req, res) => {
+      // const  id = req.params.id;
+      const query = {};
+      // console.log(query);
+
+      const result = await companyCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
-
-
-
-
-
-
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
