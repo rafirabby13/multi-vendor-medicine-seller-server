@@ -205,12 +205,28 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/accept-payment/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: 'Paid',
+        },
+      };
+      const result = await paymentCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+
+
+
     //  Admin Dashboard related Api's
 
-    app.get("/total-payment-paid", async (req, res) => {
+    app.get("/total-payment-paid",verifyToken, async (req, res) => {
       const query = {};
 
-      const result = await paymentCollection.find().toArray();
+      const result = await paymentCollection.find(query).toArray();
       res.send(result);
     });
 
