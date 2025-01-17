@@ -152,7 +152,7 @@ async function run() {
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
-      console.log(amount);
+      // console.log(amount);
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -167,7 +167,12 @@ async function run() {
 
     app.post("/payments", async (req, res) => {
       const payment = req.body;
-      // console.log(payment);
+      console.log(payment);
+
+      
+ 
+      
+     
       const result = await paymentCollection.insertOne(payment);
 
       //    delete each items from the cart
@@ -177,10 +182,17 @@ async function run() {
           $in: payment.cartId.map((id) => new ObjectId(id)),
         },
       };
+      
       const deletedResult = await cartCollection.deleteMany(query);
 
       res.send({ result, deletedResult });
     });
+
+
+    
+
+
+
 
     //  Admin Dashboard related Api's
 
@@ -215,13 +227,22 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
-    app.get("/users/role/:email", verifyToken, async (req, res) => {
+    app.get("/users/role", verifyToken, async (req, res) => {
       // console.log(req.decoded.email);
       const query = {email: req.decoded.email};
 
       const result = await usersCollection.findOne(query);
       // console.log(result);
       res.send(result.role);
+    });
+
+    app.get("/myPayment", verifyToken, async (req, res) => {
+      const email = req.query.email
+      const query = {email: email};
+
+      const result = await paymentCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
     });
 
 
@@ -296,6 +317,16 @@ async function run() {
     // medicine category related api's
 
     app.get("/medicine-category",verifyToken, async (req, res) => {
+      // console.log(req.decoded.email);
+      const query = {};
+      // console.log(query);
+
+      const result = await medicineCategoryCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    });
+
+    app.get("/medicine-all-category", async (req, res) => {
       // console.log(req.decoded.email);
       const query = {};
       // console.log(query);
