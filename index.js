@@ -59,12 +59,12 @@ async function run() {
       // );
       // console.log("inside verify token ", req.headers);
       if (!req.headers.authorization) {
-        return res.status(401).send({ message: "Un-hatori access" });
+        return res.status(401).send({ message: "Unauthorize Access" });
       }
       const token = req.headers.authorization.split(" ")[1];
       jwt.verify(token, process.env.ACCESS_TOKEN_KEY, function (err, decoded) {
         if (err) {
-          return res.status(401).send({ message: "Un-hatori access" });
+          return res.status(401).send({ message: "Unauthorize Access" });
         }
         req.decoded = decoded;
 
@@ -81,6 +81,21 @@ async function run() {
 
       const role = result.role;
       if (role !== "admin") {
+        return res
+          .status(401)
+          .send({ message: "kiyu bacchu , pakar liya na!!" });
+      }
+
+      next();
+    };
+
+    const verifySeller = async (req, res, next) => {
+      // console.log(req.decoded);
+      const query = { email: req.decoded.email };
+      const result = await usersCollection.findOne(query);
+
+      const role = result.role;
+      if (role !== "seller") {
         return res
           .status(401)
           .send({ message: "kiyu bacchu , pakar liya na!!" });
@@ -185,7 +200,7 @@ async function run() {
 
     app.post("/payments", async (req, res) => {
       const payment = req.body;
-      console.log(payment);
+      // console.log(payment);
 
       const result = await paymentCollection.insertOne(payment);
 
@@ -202,7 +217,7 @@ async function run() {
       res.send({ result, deletedResult });
     });
 
-    app.get("/payments/seller", verifyToken, async (req, res) => {
+    app.get("/payments/seller", verifyToken,verifySeller, async (req, res) => {
       const email = req.query.email;
 
       const query = {
@@ -214,7 +229,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/accept-payment/:id", async (req, res) => {
+    app.patch("/accept-payment/:id",verifyToken,verifyAdmin, async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: new ObjectId(id) };
@@ -232,7 +247,7 @@ async function run() {
 
     //  Admin Dashboard related Api's
 
-    app.get("/total-payment-paid",verifyToken, async (req, res) => {
+    app.get("/total-payment-paid",verifyToken,verifyAdmin, async (req, res) => {
       const query = {};
 
       const result = await paymentCollection.find(query).toArray();
@@ -283,7 +298,7 @@ async function run() {
 
     // update users role
 
-    app.post("/user/role/:id", async (req, res) => {
+    app.post("/user/role/:id",verifyToken,verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const role = req.body;
       console.log(role, id);
@@ -301,13 +316,13 @@ async function run() {
 
     // banner related api's
 
-    app.post("/banner", async (req, res) => {
+    app.post("/banner",verifyToken, async (req, res) => {
       const bannerData = req.body;
       const result = await bannerCollection.insertOne(bannerData);
       res.send(result);
     });
 
-    app.get("/banner", verifyToken, async (req, res) => {
+    app.get("/banner", verifyToken,verifyAdmin, async (req, res) => {
       // console.log(req.decoded.email);
       const query = {};
 
@@ -350,7 +365,7 @@ async function run() {
 
     // medicine category related api's
 
-    app.get("/medicine-category", verifyToken, async (req, res) => {
+    app.get("/medicine-category", verifyToken,verifyAdmin, async (req, res) => {
       // console.log(req.decoded.email);
       const query = {};
       // console.log(query);
@@ -369,7 +384,7 @@ async function run() {
       // console.log(result);
       res.send(result);
     });
-    app.get("/medicine-category/:id", verifyToken, async (req, res) => {
+    app.get("/medicine-category/:id", verifyToken,verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       // console.log(query);
@@ -381,7 +396,7 @@ async function run() {
 
     // update category related api
 
-    app.post("/category/update", async (req, res) => {
+    app.post("/category/update",verifyToken,verifyAdmin, async (req, res) => {
       const updatedData = req.body;
       // console.log(updatedData);
 
@@ -402,14 +417,14 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/category/add", async (req, res) => {
+    app.post("/category/add",verifyToken,verifyAdmin, async (req, res) => {
       const updatedData = req.body;
 
       const result = await medicineCategoryCollection.insertOne(updatedData);
       res.send(result);
     });
 
-    app.delete("/category/:id", async (req, res) => {
+    app.delete("/category/:id",verifyToken,verifyAdmin, async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: new ObjectId(id) };
@@ -430,7 +445,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/shop/seller", verifyToken, async (req, res) => {
+    app.get("/shop/seller", verifyToken,verifySeller, async (req, res) => {
       const email = req.query.email;
       // console.log(email);
       const query = { sellerEmail: email };
