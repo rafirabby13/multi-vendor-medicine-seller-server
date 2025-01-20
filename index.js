@@ -149,11 +149,20 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/cart", async (req, res) => {
-      const query = {};
+    app.post("/cart/clearCart", async (req, res) => {
+      const cartByEmail = req.body;
+      console.log(cartByEmail);
+      
+      const query = {
+        _id: {
+          $in: cartByEmail.map((id) => new ObjectId(id)),
+        },
+      };
 
-      const result = await cartCollection.deleteMany(query);
-      res.send(result);
+      const deletedResult = await cartCollection.deleteMany(query);
+
+     
+      res.send(deletedResult);
     });
 
     //   payment api
