@@ -49,7 +49,7 @@ async function run() {
       res.send({ token });
     });
 
-    // jwt middleware
+    // jwt middleware ff
     // console.log(req.headers.authorization.split(' ')[1]);
 
     const verifyToken = (req, res, next) => {
