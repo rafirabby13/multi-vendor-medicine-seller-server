@@ -23,6 +23,9 @@ const client = new MongoClient(uri, {
   },
 });
 
+
+
+
 async function run() {
   try {
     const cartCollection = client.db("medicineSelling").collection("cart");
@@ -378,7 +381,7 @@ async function run() {
     app.get("/medicine-all-category", async (req, res) => {
       // console.log(req.decoded.email);
       const query = {};
-      // console.log(query);
+      // console.log(query);a
 
       const result = await medicineCategoryCollection.find(query).toArray();
       // console.log(result);
