@@ -1,6 +1,4 @@
-import {app} from "./app.js"
 
-import { envVars } from "./app/config/env.js";
 import { client } from "./app/config/database.js";
 async function run() {
   try {
@@ -27,13 +25,13 @@ process.on("unhandledRejection", (err) => {
 // Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
   console.error("❌ Uncaught Exception:", err);
-  process.exit(1);
+  // process.exit(1);
 });
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
   console.log("🔄 SIGTERM received, shutting down gracefully");
-  // await client.close();
+  await client.close();
   // process.exit(0);
 });
 

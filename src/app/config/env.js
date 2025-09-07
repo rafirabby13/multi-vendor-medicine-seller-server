@@ -3,6 +3,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 export const envVars = {
+  uri: process.env.MONGODB_URI,
   port: process.env.PORT || 5000,
   dbUser: process.env.DB_USER,
   dbPass: process.env.DB_PASS,
