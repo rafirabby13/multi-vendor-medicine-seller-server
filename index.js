@@ -1,28 +1,24 @@
-const express = require("express");
+import express from "express" 
 const app = express();
-require("dotenv").config();
+import dotenv from "dotenv"
+import cors from "cors"
+import jwt from "jsonwebtoken"
+import { client } from "./src/app/config/database.js";
+dotenv.config();
 
-const jwt = require("jsonwebtoken");
-const cors = require("cors");
 
-const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
+import Stripe from "stripe";
+import { verifyAdmin, verifySeller, verifyToken } from "./src/app/middlewares/auth.js";
+import router from "./src/app/routes/index.js";
+const stripe = new Stripe(process.env.PAYMENT_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+
 
 app.use(cors());
 app.use(express.json());
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bbiovs6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
-
+app.use("/api/v1", router);
 
 
 
@@ -44,439 +40,432 @@ async function run() {
 
     // JWt related api's
 
-    app.post("/jwt", async (req, res) => {
-      const user = req.body;
-      const token = jwt.sign(user, `${process.env.ACCESS_TOKEN_KEY}`, {
-        expiresIn: "5h",
-      });
-      res.send({ token });
-    });
+    // app.post("/jwt", async (req, res) => {
+    //   const user = req.body;
+    //   const token = jwt.sign(user, `${process.env.ACCESS_TOKEN_KEY}`, {
+    //     expiresIn: "5h",
+    //   });
+    //   res.send({ token });
+    // });
 
-    // jwt middleware ff
-    // console.log(req.headers.authorization.split(' ')[1]);
 
-    const verifyToken = (req, res, next) => {
-      // console.log(
-      //   "inside verify token ",
-      //   req.headers.authorization.split(" ")[1]
-      // );
-      // console.log("inside verify token ", req.headers);
-      if (!req.headers.authorization) {
-        return res.status(401).send({ message: "Unauthorize Access" });
-      }
-      const token = req.headers.authorization.split(" ")[1];
-      jwt.verify(token, process.env.ACCESS_TOKEN_KEY, function (err, decoded) {
-        if (err) {
-          return res.status(401).send({ message: "Unauthorize Access" });
-        }
-        req.decoded = decoded;
+    // const verifyToken = (req, res, next) => {
+    //   if (!req.headers.authorization) {
+    //     return res.status(401).send({ message: "Unauthorize Access" });
+    //   }
+    //   const token = req.headers.authorization.split(" ")[1];
+    //   jwt.verify(token, process.env.ACCESS_TOKEN_KEY, function (err, decoded) {
+    //     if (err) {
+    //       return res.status(401).send({ message: "Unauthorize Access" });
+    //     }
+    //     req.decoded = decoded;
 
-        next();
-      });
-    };
+    //     next();
+    //   });
+    // };
 
     // verify admin
 
-    const verifyAdmin = async (req, res, next) => {
-      // console.log(req.decoded);
-      const query = { email: req.decoded.email };
-      const result = await usersCollection.findOne(query);
+    // const verifyAdmin = async (req, res, next) => {
+    //   // console.log(req.decoded);
+    //   const query = { email: req.decoded.email };
+    //   const result = await usersCollection.findOne(query);
 
-      const role = result.role;
-      if (role !== "admin") {
-        return res
-          .status(401)
-          .send({ message: "kiyu bacchu , pakar liya na!!" });
-      }
+    //   const role = result.role;
+    //   if (role !== "admin") {
+    //     return res
+    //       .status(401)
+    //       .send({ message: "kiyu bacchu , pakar liya na!!" });
+    //   }
 
-      next();
-    };
+    //   next();
+    // };
 
-    const verifySeller = async (req, res, next) => {
-      // console.log(req.decoded);
-      const query = { email: req.decoded.email };
-      const result = await usersCollection.findOne(query);
+    // const verifySeller = async (req, res, next) => {
+    //   // console.log(req.decoded);
+    //   const query = { email: req.decoded.email };
+    //   const result = await usersCollection.findOne(query);
 
-      const role = result.role;
-      if (role !== "seller") {
-        return res
-          .status(401)
-          .send({ message: "kiyu bacchu , pakar liya na!!" });
-      }
+    //   const role = result.role;
+    //   if (role !== "seller") {
+    //     return res
+    //       .status(401)
+    //       .send({ message: "kiyu bacchu , pakar liya na!!" });
+    //   }
 
-      next();
-    };
+    //   next();
+    // };
 
     // Cart routes
 
-    app.post("/cart", async (req, res) => {
-      const cartData = req.body;
-      //   console.log(cartData);
-      const cartDataPOst = {
-        ...cartData,
-        _id: new ObjectId(),
-      };
-      const result = await cartCollection.insertOne(cartDataPOst);
-      res.send(result);
-    });
-    app.get("/cart", async (req, res) => {
-      const email = req.query.email;
+    // app.post("/cart", async (req, res) => {
+    //   const cartData = req.body;
+    //   //   console.log(cartData);
+    //   const cartDataPOst = {
+    //     ...cartData,
+    //     _id: new ObjectId(),
+    //   };
+    //   const result = await cartCollection.insertOne(cartDataPOst);
+    //   res.send(result);
+    // });
+    // app.get("/cart", async (req, res) => {
+    //   const email = req.query.email;
 
-      const query = {
-        email: email,
-      };
+    //   const query = {
+    //     email: email,
+    //   };
 
-      const result = await cartCollection.find(query).toArray();
-      res.send(result);
-    });
+    //   const result = await cartCollection.find(query).toArray();
+    //   res.send(result);
+    // });
 
-    app.patch("/cart/inc/:id", async (req, res) => {
-      const id = req.params.id;
-      console.log(id);
+    // app.patch("/cart/inc/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   console.log(id);
 
-      const query = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $inc: {
-          quantity: 1,
-        },
-      };
-      const result = await cartCollection.updateOne(query, updateDoc, options);
-      console.log(result);
-      res.send(result);
-    });
-    app.patch("/cart/dec/:id", async (req, res) => {
-      const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   const options = { upsert: true };
+    //   const updateDoc = {
+    //     $inc: {
+    //       quantity: 1,
+    //     },
+    //   };
+    //   const result = await cartCollection.updateOne(query, updateDoc, options);
+    //   console.log(result);
+    //   res.send(result);
+    // });
+    // app.patch("/cart/dec/:id", async (req, res) => {
+    //   const id = req.params.id;
 
-      const query = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $inc: {
-          quantity: -1,
-        },
-      };
-      const result = await cartCollection.updateOne(query, updateDoc, options);
-      res.send(result);
-    });
-    app.delete("/cart/:id", async (req, res) => {
-      const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   const options = { upsert: true };
+    //   const updateDoc = {
+    //     $inc: {
+    //       quantity: -1,
+    //     },
+    //   };
+    //   const result = await cartCollection.updateOne(query, updateDoc, options);
+    //   res.send(result);
+    // });
+    // app.delete("/cart/:id", async (req, res) => {
+    //   const id = req.params.id;
 
-      const query = { _id: new ObjectId(id) };
+    //   const query = { _id: new ObjectId(id) };
 
-      const result = await cartCollection.deleteOne(query);
-      res.send(result);
-    });
+    //   const result = await cartCollection.deleteOne(query);
+    //   res.send(result);
+    // });
 
-    app.post("/cart/clearCart", async (req, res) => {
-      const cartByEmail = req.body;
-      console.log(cartByEmail);
+    // app.post("/cart/clearCart", async (req, res) => {
+    //   const cartByEmail = req.body;
+    //   console.log(cartByEmail);
       
-      const query = {
-        _id: {
-          $in: cartByEmail.map((id) => new ObjectId(id)),
-        },
-      };
+    //   const query = {
+    //     _id: {
+    //       $in: cartByEmail.map((id) => new ObjectId(id)),
+    //     },
+    //   };
 
-      const deletedResult = await cartCollection.deleteMany(query);
+    //   const deletedResult = await cartCollection.deleteMany(query);
 
      
-      res.send(deletedResult);
-    });
+    //   res.send(deletedResult);
+    // });
 
     //   payment api
 
-    app.post("/create-payment-intent", async (req, res) => {
-      const { price } = req.body;
-      const amount = parseInt(price * 100);
-      // console.log(amount);
+    // app.post("/create-payment-intent", async (req, res) => {
+    //   const { price } = req.body;
+    //   const amount = parseInt(price * 100);
+    //   // console.log(amount);
 
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: "usd",
-        payment_method_types: ["card"],
-      });
+    //   const paymentIntent = await stripe.paymentIntents.create({
+    //     amount: amount,
+    //     currency: "usd",
+    //     payment_method_types: ["card"],
+    //   });
 
-      res.send({
-        clientSecret: paymentIntent.client_secret,
-      });
-    });
+    //   res.send({
+    //     clientSecret: paymentIntent.client_secret,
+    //   });
+    // });
 
-    app.post("/payments", async (req, res) => {
-      const payment = req.body;
-      // console.log(payment);
+    // app.post("/payments", async (req, res) => {
+    //   const payment = req.body;
+    //   // console.log(payment);
 
-      const result = await paymentCollection.insertOne(payment);
+    //   const result = await paymentCollection.insertOne(payment);
 
-      //    delete each items from the cart
+    //   //    delete each items from the cart
 
-      const query = {
-        _id: {
-          $in: payment.cartId.map((id) => new ObjectId(id)),
-        },
-      };
+    //   const query = {
+    //     _id: {
+    //       $in: payment.cartId.map((id) => new ObjectId(id)),
+    //     },
+    //   };
 
-      const deletedResult = await cartCollection.deleteMany(query);
+    //   const deletedResult = await cartCollection.deleteMany(query);
 
-      res.send({ result, deletedResult });
-    });
+    //   res.send({ result, deletedResult });
+    // });
 
-    app.get("/payments/seller", verifyToken,verifySeller, async (req, res) => {
-      const email = req.query.email;
+    // app.get("/payments/seller", verifyToken,verifySeller, async (req, res) => {
+    //   const email = req.query.email;
 
-      const query = {
-        sellerEmail: email,
-      };
+    //   const query = {
+    //     sellerEmail: email,
+    //   };
 
-      const result = await paymentCollection.find(query).toArray();
+    //   const result = await paymentCollection.find(query).toArray();
 
-      res.send(result);
-    });
+    //   res.send(result);
+    // });
 
-    app.patch("/accept-payment/:id",verifyToken,verifyAdmin, async (req, res) => {
-      const id = req.params.id;
+    // app.patch("/accept-payment/:id",verifyToken,verifyAdmin, async (req, res) => {
+    //   const id = req.params.id;
 
-      const query = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: {
-          status: 'Paid',
-        },
-      };
-      const result = await paymentCollection.updateOne(query, updateDoc, options);
-      res.send(result);
-    });
+    //   const query = { _id: new ObjectId(id) };
+    //   const options = { upsert: true };
+    //   const updateDoc = {
+    //     $set: {
+    //       status: 'Paid',
+    //     },
+    //   };
+    //   const result = await paymentCollection.updateOne(query, updateDoc, options);
+    //   res.send(result);
+    // });
 
 
 
     //  Admin Dashboard related Api's
 
-    app.get("/total-payment-paid",verifyToken,verifyAdmin, async (req, res) => {
-      const query = {};
+    // app.get("/total-payment-paid",verifyToken,verifyAdmin, async (req, res) => {
+    //   const query = {};
 
-      const result = await paymentCollection.find(query).toArray();
-      res.send(result);
-    });
+    //   const result = await paymentCollection.find(query).toArray();
+    //   res.send(result);
+    // });
 
     //   Users related api's
 
-    app.post("/users", async (req, res) => {
-      const usersData = req.body;
-      //   console.log(cartData);
-      const query = { email: usersData.email };
-      const isExist = await usersCollection.findOne(query);
-      if (!isExist) {
-        const result = await usersCollection.insertOne(usersData);
-        res.send(result);
-      }
-    });
+    // app.post("/users", async (req, res) => {
+    //   const usersData = req.body;
+    //   //   console.log(cartData);
+    //   const query = { email: usersData.email };
+    //   const isExist = await usersCollection.findOne(query);
+    //   if (!isExist) {
+    //     const result = await usersCollection.insertOne(usersData);
+    //     res.send(result);
+    //   }
+    // });
 
-    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
-      const query = {};
+    // app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
+    //   const query = {};
 
-      const result = await usersCollection.find(query).toArray();
-      res.send(result);
-    });
+    //   const result = await usersCollection.find(query).toArray();
+    //   res.send(result);
+    // });
 
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
 
-    app.get("/users/role", verifyToken, async (req, res) => {
-      // console.log(req.decoded.email);
-      const query = { email: req.decoded.email };
+    // app.get("/users/role", verifyToken, async (req, res) => {
+    //   // console.log(req.decoded.email);
+    //   const query = { email: req.decoded.email };
 
-      const result = await usersCollection.findOne(query);
-      // console.log(result);
-      res.send(result.role);
-    });
+    //   const result = await usersCollection.findOne(query);
+    //   // console.log(result);
+    //   res.send(result.role);
+    // });
 
-    app.get("/myPayment", verifyToken, async (req, res) => {
-      const email = req.query.email;
-      const query = { buyerEmail: email };
+    // app.get("/myPayment", verifyToken, async (req, res) => {
+    //   const email = req.query.email;
+    //   const query = { buyerEmail: email };
 
-      const result = await paymentCollection.find(query).toArray();
-      // console.log(result);
-      res.send(result);
-    });
+    //   const result = await paymentCollection.find(query).toArray();
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
     // update users role
 
-    app.post("/user/role/:id",verifyToken,verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const role = req.body;
-      console.log(role, id);
+    // app.post("/user/role/:id",verifyToken,verifyAdmin, async (req, res) => {
+    //   const id = req.params.id;
+    //   const role = req.body;
+    //   console.log(role, id);
 
-      const query = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: {
-          role: role.updateRole,
-        },
-      };
-      const result = await usersCollection.updateOne(query, updateDoc, options);
-      res.send(result);
-    });
+    //   const query = { _id: new ObjectId(id) };
+    //   const options = { upsert: true };
+    //   const updateDoc = {
+    //     $set: {
+    //       role: role.updateRole,
+    //     },
+    //   };
+    //   const result = await usersCollection.updateOne(query, updateDoc, options);
+    //   res.send(result);
+    // });
 
     // banner related api's
 
-    app.post("/banner",verifyToken, async (req, res) => {
-      const bannerData = req.body;
-      const result = await bannerCollection.insertOne(bannerData);
-      res.send(result);
-    });
+    // app.post("/banner",verifyToken, async (req, res) => {
+    //   const bannerData = req.body;
+    //   const result = await bannerCollection.insertOne(bannerData);
+    //   res.send(result);
+    // });
 
-    app.get("/banner", verifyToken,verifyAdmin, async (req, res) => {
-      // console.log(req.decoded.email);
-      const query = {};
+    // app.get("/banner", verifyToken,verifyAdmin, async (req, res) => {
+    //   // console.log(req.decoded.email);
+    //   const query = {};
 
-      const result = await bannerCollection.find(query).toArray();
-      // console.log(result);
-      res.send(result);
-    });
+    //   const result = await bannerCollection.find(query).toArray();
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
-    app.patch("/banner/:id", async (req, res) => {
-      const id = req.params.id;
+    // app.patch("/banner/:id", async (req, res) => {
+    //   const id = req.params.id;
 
-      const query = { _id: new ObjectId(id) };
+    //   const query = { _id: new ObjectId(id) };
 
-      const currentBanner = await bannerCollection.findOne(query);
-      // console.log(currentBanner.isActive);
+    //   const currentBanner = await bannerCollection.findOne(query);
+    //   // console.log(currentBanner.isActive);
 
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: {
-          isActive: !currentBanner.isActive,
-        },
-      };
-      const result = await bannerCollection.updateOne(
-        query,
-        updateDoc,
-        options
-      );
-      res.send(result);
-    });
+    //   const options = { upsert: true };
+    //   const updateDoc = {
+    //     $set: {
+    //       isActive: !currentBanner.isActive,
+    //     },
+    //   };
+    //   const result = await bannerCollection.updateOne(
+    //     query,
+    //     updateDoc,
+    //     options
+    //   );
+    //   res.send(result);
+    // });
 
-    app.get("/banner/active", async (req, res) => {
-      // console.log(req.decoded.email);
-      const query = { isActive: true };
-      // console.log(query);
+    // app.get("/banner/active", async (req, res) => {
+    //   // console.log(req.decoded.email);
+    //   const query = { isActive: true };
+    //   // console.log(query);
 
-      const result = await bannerCollection.find(query).toArray();
-      // console.log(result);
-      res.send(result);
-    });
+    //   const result = await bannerCollection.find(query).toArray();
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
     // medicine category related api's
 
-    app.get("/medicine-category", verifyToken,verifyAdmin, async (req, res) => {
-      // console.log(req.decoded.email);
-      const query = {};
-      // console.log(query);
+    // app.get("/medicine-category", verifyToken,verifyAdmin, async (req, res) => {
+    //   // console.log(req.decoded.email);
+    //   const query = {};
+    //   // console.log(query);
 
-      const result = await medicineCategoryCollection.find(query).toArray();
-      // console.log(result);
-      res.send(result);
-    });
+    //   const result = await medicineCategoryCollection.find(query).toArray();
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
-    app.get("/medicine-all-category", async (req, res) => {
-      // console.log(req.decoded.email);
-      const query = {};
-      // console.log(query);a
+    // app.get("/medicine-all-category", async (req, res) => {
+    //   // console.log(req.decoded.email);
+    //   const query = {};
+    //   // console.log(query);a
 
-      const result = await medicineCategoryCollection.find(query).toArray();
-      // console.log(result);
-      res.send(result);
-    });
-    app.get("/medicine-category/:id", verifyToken,verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      // console.log(query);
+    //   const result = await medicineCategoryCollection.find(query).toArray();
+    //   // console.log(result);
+    //   res.send(result);
+    // });
+    // app.get("/medicine-category/:id", verifyToken,verifyAdmin, async (req, res) => {
+    //   const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   // console.log(query);
 
-      const result = await medicineCategoryCollection.findOne(query);
-      // console.log(result);
-      res.send(result);
-    });
+    //   const result = await medicineCategoryCollection.findOne(query);
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
     // update category related api
 
-    app.post("/category/update",verifyToken,verifyAdmin, async (req, res) => {
-      const updatedData = req.body;
-      // console.log(updatedData);
+    // app.post("/category/update",verifyToken,verifyAdmin, async (req, res) => {
+    //   const updatedData = req.body;
+    //   // console.log(updatedData);
 
-      const query = { _id: new ObjectId(updatedData.id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: {
-          name: updatedData.name,
-          image: updatedData.image,
-        },
-      };
-      const result = await medicineCategoryCollection.updateOne(
-        query,
-        updateDoc,
-        options
-      );
-      // console.log(result);
-      res.send(result);
-    });
+    //   const query = { _id: new ObjectId(updatedData.id) };
+    //   const options = { upsert: true };
+    //   const updateDoc = {
+    //     $set: {
+    //       name: updatedData.name,
+    //       image: updatedData.image,
+    //     },
+    //   };
+    //   const result = await medicineCategoryCollection.updateOne(
+    //     query,
+    //     updateDoc,
+    //     options
+    //   );
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
-    app.post("/category/add",verifyToken,verifyAdmin, async (req, res) => {
-      const updatedData = req.body;
+    // app.post("/category/add",verifyToken,verifyAdmin, async (req, res) => {
+    //   const updatedData = req.body;
 
-      const result = await medicineCategoryCollection.insertOne(updatedData);
-      res.send(result);
-    });
+    //   const result = await medicineCategoryCollection.insertOne(updatedData);
+    //   res.send(result);
+    // });
 
-    app.delete("/category/:id",verifyToken,verifyAdmin, async (req, res) => {
-      const id = req.params.id;
+    // app.delete("/category/:id",verifyToken,verifyAdmin, async (req, res) => {
+    //   const id = req.params.id;
 
-      const query = { _id: new ObjectId(id) };
+    //   const query = { _id: new ObjectId(id) };
 
-      const result = await medicineCategoryCollection.deleteOne(query);
-      res.send(result);
-    });
+    //   const result = await medicineCategoryCollection.deleteOne(query);
+    //   res.send(result);
+    // });
 
     // shop related api
 
-    app.get("/shop", async (req, res) => {
-      // const  id = req.params.id;
-      const query = {};
-      // console.log(query);
+    // app.get("/shop", async (req, res) => {
+    //   // const  id = req.params.id;
+    //   const query = {};
+    //   // console.log(query);
 
-      const result = await shopCollection.find(query).toArray();
-      // console.log(result);
-      res.send(result);
-    });
+    //   const result = await shopCollection.find(query).toArray();
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
-    app.get("/shop/seller", verifyToken,verifySeller, async (req, res) => {
-      const email = req.query.email;
-      // console.log(email);
-      const query = { sellerEmail: email };
-      // console.log(query);
+    // app.get("/shop/seller", verifyToken,verifySeller, async (req, res) => {
+    //   const email = req.query.email;
+    //   // console.log(email);
+    //   const query = { sellerEmail: email };
+    //   // console.log(query);
 
-      const result = await shopCollection.find(query).toArray();
-      // console.log(result);
-      res.send(result);
-    });
+    //   const result = await shopCollection.find(query).toArray();
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
-    app.post("/shop/addItem", verifyToken, async (req, res) => {
-      const data = req.body;
-      // console.log(data);
-      const result = await shopCollection.insertOne(data);
-      res.send(result);
-    });
+    // app.post("/shop/addItem", verifyToken, async (req, res) => {
+    //   const data = req.body;
+    //   // console.log(data);
+    //   const result = await shopCollection.insertOne(data);
+    //   res.send(result);
+    // });
 
     // category api's
 
-    app.get("/company", async (req, res) => {
-      // const  id = req.params.id;
-      const query = {};
-      // console.log(query);
+    // app.get("/company", async (req, res) => {
+    //   // const  id = req.params.id;
+    //   const query = {};
+    //   // console.log(query);
 
-      const result = await companyCollection.find(query).toArray();
-      // console.log(result);
-      res.send(result);
-    });
+    //   const result = await companyCollection.find(query).toArray();
+    //   // console.log(result);
+    //   res.send(result);
+    // });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
