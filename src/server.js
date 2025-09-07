@@ -9,9 +9,9 @@ async function run() {
     console.log("✅ Successfully connected to MongoDB!");
 
     // Start server
-    app.listen(envVars.port, () => {
-      console.log(`🚀 Server running on port ${envVars.port}`);
-    });
+    // app.listen(envVars.port, () => {
+    //   console.log(`🚀 Server running on port ${envVars.port}`);
+    // });
   } catch (error) {
     console.error("❌ Failed to connect to MongoDB:", error);
     process.exit(1);
